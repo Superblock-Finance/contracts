@@ -12,16 +12,17 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, ERC20PausableUpgradeable, ERC20PermitUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
     bytes32 public constant FREEZER_ROLE = keccak256("FREEZER_ROLE");
-    bytes32 public constant WITHDRAWER_ROLE = keccak256("WITHDRAWER_ROLE");
     bytes32 public constant BLACKLISTER_ROLE = keccak256("BLACKLISTER_ROLE");
+    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant WITHDRAWER_ROLE = keccak256("WITHDRAWER_ROLE");
 
     mapping(address => bool) private _frozenAccounts;
     mapping(address => bool) private _blacklistedAccounts;
 
     event MintEvent(address indexed to, uint256 amount);
-    event BurnEvent(address indexed to, uint256 amount);
+    event BurnEvent(address indexed account, uint256 amount);
     event TransferEvent(address indexed from, address indexed to, uint256 amount);
     event FreezeAccountEvent(address indexed account);
     event UnfreezeAccountEvent(address indexed account);
@@ -46,10 +47,11 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(PAUSER_ROLE, admin);
         _grantRole(MINTER_ROLE, admin);
-        _grantRole(UPGRADER_ROLE, admin);
+        _grantRole(BURNER_ROLE, admin);
         _grantRole(FREEZER_ROLE, admin);
-        _grantRole(WITHDRAWER_ROLE, admin);
         _grantRole(BLACKLISTER_ROLE, admin);
+        _grantRole(UPGRADER_ROLE, admin);
+        _grantRole(WITHDRAWER_ROLE, admin);
     }
 
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
@@ -57,7 +59,7 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
         emit MintEvent(to, amount);
     }
 
-    function burn(address account, uint256 amount) public {
+    function burn(address account, uint256 amount) public onlyRole(BURNER_ROLE) {
         _burn(account, amount);
         emit BurnEvent(account, amount);
     }
