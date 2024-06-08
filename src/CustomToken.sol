@@ -31,6 +31,8 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
     event UnblacklistAccountEvent(address indexed account);
     event PauseEvent();
     event UnpauseEvent();
+    event WithdrawEtherEvent(address indexed account, uint256 amount);
+    event WithdrawERC20Event(address indexed token, address indexed account, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -128,6 +130,7 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
     function withdrawEther(uint256 amount) public nonReentrant onlyRole(WITHDRAWER_ROLE) {
         require(amount <= address(this).balance, "Insufficient balance in contract");
         payable(_msgSender()).transfer(amount);
+        emit WithdrawEtherEvent(_msgSender(), amount);
     }
 
     // Withdraw ERC20 tokens from the contract
@@ -140,6 +143,7 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
         uint256 balance = token.balanceOf(address(this));
         require(amount <= balance, "Insufficient balance in the contract");
         token.transfer(_msgSender(), amount);
+        emit WithdrawERC20Event(tokenAddress, _msgSender(), amount);
     }
 
     // Fallback and receive functions to handle Ether transfers
