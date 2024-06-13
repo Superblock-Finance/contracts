@@ -45,7 +45,7 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
     function initialize(string memory name, string memory symbol, address admin) initializer public {
         __ERC20_init(name, symbol);
         __ERC20Burnable_init();
-        __Pausable_init();
+        __ERC20Pausable_init();
         __AccessControl_init();
         __ERC20Permit_init(name);
         __UUPSUpgradeable_init();
