@@ -25,17 +25,16 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
     mapping(address => bool) private _frozenAccounts;
     mapping(address => bool) private _blacklistedAccounts;
 
-    event MintEvent(address indexed to, uint256 amount);
-    event BurnEvent(address indexed account, uint256 amount);
-    event TransferEvent(address indexed from, address indexed to, uint256 amount);
-    event FreezeAccountEvent(address indexed account);
-    event UnfreezeAccountEvent(address indexed account);
-    event BlacklistAccountEvent(address indexed account);
-    event UnblacklistAccountEvent(address indexed account);
-    event PauseEvent();
-    event UnpauseEvent();
-    event WithdrawEtherEvent(address indexed account, uint256 amount);
-    event WithdrawERC20Event(address indexed token, address indexed account, uint256 amount);
+    event Mint(address indexed to, uint256 amount);
+    event Burn(address indexed account, uint256 amount);
+    event Freeze(address indexed account);
+    event Unfreeze(address indexed account);
+    event Blacklist(address indexed account);
+    event Unblacklist(address indexed account);
+    event Pause();
+    event Unpause();
+    event WithdrawEther(address indexed account, uint256 amount);
+    event WithdrawERC20(address indexed token, address indexed account, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -63,37 +62,32 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
 
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
-        emit MintEvent(to, amount);
+        emit Mint(to, amount);
     }
 
     function burn(address account, uint256 amount) public onlyRole(BURNER_ROLE) {
         _burn(account, amount);
-        emit BurnEvent(account, amount);
-    }
-
-    function transfer(address from, address to, uint256 amount) public {
-        _transfer(from, to, amount);
-        emit TransferEvent(from, to, amount);
+        emit Burn(account, amount);
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
         _pause();
-        emit PauseEvent();
+        emit Pause();
     }
 
     function unpause() public onlyRole(PAUSER_ROLE) {
         _unpause();
-        emit UnpauseEvent();
+        emit Unpause();
     }
 
-    function freezeAddress(address account) public onlyRole(FREEZER_ROLE) {
+    function freeze(address account) public onlyRole(FREEZER_ROLE) {
         _frozenAccounts[account] = true;
-        emit FreezeAccountEvent(account);
+        emit Freeze(account);
     }
 
-    function unfreezeAddress(address account) public onlyRole(FREEZER_ROLE) {
+    function unfreeze(address account) public onlyRole(FREEZER_ROLE) {
         _frozenAccounts[account] = false;
-        emit UnfreezeAccountEvent(account);
+        emit Unfreeze(account);
     }
 
     function isFrozen(address account) public view returns (bool) {
@@ -102,12 +96,12 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
 
     function blacklist(address account) public onlyRole(BLACKLISTER_ROLE) {
         _blacklistedAccounts[account] = true;
-        emit BlacklistAccountEvent(account);
+        emit Blacklist(account);
     }
 
     function unblacklist(address account) public onlyRole(BLACKLISTER_ROLE) {
         _blacklistedAccounts[account] = false;
-        emit UnblacklistAccountEvent(account);
+        emit Unblacklist(account);
     }
 
     function isBlacklisted(address account) public view returns (bool) {
@@ -133,7 +127,7 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
     function withdrawEther(uint256 amount) public nonReentrant onlyRole(WITHDRAWER_ROLE) {
         require(amount <= address(this).balance, "Insufficient balance in contract");
         payable(_msgSender()).transfer(amount);
-        emit WithdrawEtherEvent(_msgSender(), amount);
+        emit WithdrawEther(_msgSender(), amount);
     }
 
     // Withdraw ERC20 tokens from the contract
@@ -142,11 +136,15 @@ contract CustomToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeabl
         uint256 balance = token.balanceOf(address(this));
         require(amount <= balance, "Insufficient balance in the contract");
         token.safeTransfer(_msgSender(), amount);
-        emit WithdrawERC20Event(tokenAddress, _msgSender(), amount);
+        emit WithdrawERC20(tokenAddress, _msgSender(), amount);
     }
 
     // Fallback and receive functions to handle Ether transfers
-    receive() external payable {}
+    receive() external payable {
+        revert("Direct transfers not allowed");
+    }
 
-    fallback() external payable {}
+    fallback() external payable {
+        revert("Direct transfers not allowed");
+    }
 }
